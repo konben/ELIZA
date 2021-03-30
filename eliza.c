@@ -33,6 +33,7 @@ char *replace_first(char *str, char *substr, char *replacement)
 /* Conjugates the pronouns in a string. */
 char *conjugate_pronouns(char *msg)
 {
+    // TODO: Implement it in a way so that it can conjugate in both directions without generating an endless loop.
     char *buffer = malloc(MESSAGE_MAX_LENGTH);
     strcpy(buffer, msg);
     for (char **pro = conjugations; *pro != END; pro += 2)
@@ -48,31 +49,46 @@ char *conjugate_pronouns(char *msg)
 }
 
 /* Finds the first keyword in msg and returns the string after the keyword.
- * The correct reply is placed in reply. */
+ * The correct reply to the keyword is placed in reply. */
 char *find_reply(char *msg, char **reply)
 {
     for (char **key = keyword_replies; *key != END; key += 2)
     {
         char *occurence;
         if ((occurence = strstr(msg, *key)) != NULL
-            && (occurence == msg || *(occurence - 1) == ' ')) // Make sure that only whole words/phrases are matched.
+            && (occurence == msg || *(occurence - 1) == ' ') // Make sure that only whole words/phrases are matched.
+            && (*(occurence + strlen(*key)) == '\0' || *(occurence + strlen(*key)) == ' '))
         {
             *reply = *(key + 1);
             return occurence + strlen(*key) + 1;
         }
     }
-    // No keyword found, get default reply.
+    // No keyword found, return default reply.
     *reply = no_keyword;
     return NULL;
 }
 
-/* Converts all chars in str to uppercase. */
-void to_upper(char *str)
+/* Applies preprocessing on input. */
+void preprocess(char *msg)
 {
-    for (char *c = str; *c != '\0'; c++)
+    // Remove newline character
+    msg[strlen(msg) - 1] = '\0';
+    for (char *c = msg; *c != '\0'; c++)
     {
+        // Convert to uppercase.
         if (*c >= 'a' && *c <= 'z')
             *c += 'A' - 'a';
+        // Convert tabs to spaces.
+        else if (*c == '\t')
+            *c = ' ';
+        // Remove punctuation and surplus spaces.
+        if (*c == '.' || *c == '\'' || *c == '?'
+            || *c == ' ' && (c == msg || *(c - 1) == ' ' || *(c + 1) == '\0'))
+        {
+            for (char *c2 = c; *c2 != '\0'; c2++)
+                *c2 = *(c2 + 1);
+            c--;
+        }
     }
 }
 
@@ -87,9 +103,7 @@ int main()
     {
         // Read and preprocess input.
         fgets(msg, MESSAGE_MAX_LENGTH, stdin);
-        // Remove newline.
-        msg[strlen(msg) - 1] = '\0';
-        to_upper(msg);
+        preprocess(msg);
 
         // Find and print answer.
         char *reply;
