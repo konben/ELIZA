@@ -54,10 +54,11 @@ char *find_reply(char *msg, char **reply)
     for (char **key = keyword_replies; *key != END; key += 2)
     {
         char *occurence;
-        if ((occurence = strstr(msg, *key)) != NULL)
+        if ((occurence = strstr(msg, *key)) != NULL
+            && (occurence == msg || *(occurence - 1) == ' ')) // Make sure that only whole words/phrases are matched.
         {
             *reply = *(key + 1);
-            return occurence + strlen(*key);
+            return occurence + strlen(*key) + 1;
         }
     }
     // No keyword found, get default reply.
@@ -65,16 +66,14 @@ char *find_reply(char *msg, char **reply)
     return NULL;
 }
 
-/* Removes all single quotes and trailing question marks/colons from str. */
-void remove_punctuation(char *str)
-{
-    // TODO:
-}
-
 /* Converts all chars in str to uppercase. */
 void to_upper(char *str)
 {
-    // TODO:
+    for (char *c = str; *c != '\0'; c++)
+    {
+        if (*c >= 'a' && *c <= 'z')
+            *c += 'A' - 'a';
+    }
 }
 
 /* MAIN ROUTINE */
@@ -90,7 +89,6 @@ int main()
         fgets(msg, MESSAGE_MAX_LENGTH, stdin);
         // Remove newline.
         msg[strlen(msg) - 1] = '\0';
-        remove_punctuation(msg);
         to_upper(msg);
 
         // Find and print answer.
@@ -100,7 +98,7 @@ int main()
         {
             char *conj_rest = conjugate_pronouns(rest);
             printf(reply, conj_rest);
-            puts("?\n");
+            puts("\n");
         } else
             printf("%s\n\n", reply);
     }
