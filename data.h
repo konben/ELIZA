@@ -10,7 +10,6 @@ char *conjugations[] = {
     "I'VE", "YOU'VE",
     "I'M", "YOU'RE",
     "MYSELF", "YOURSELF",
-    /* Add later when conjugation works properly.
     "AM", "ARE",
     "WAS", "WERE",
     "MY", "YOUR",
@@ -18,8 +17,7 @@ char *conjugations[] = {
     "ME", "YOU",
     "YOU'VE", "I'VE",
     "YOU'RE", "I'M",
-    "YOURSELF", "MYSELF",
-    */
+    "YOURSELF", "MYSELF",    
     END,
 };
 
@@ -27,10 +25,11 @@ char *conjugations[] = {
  * Ordered as: keyword, reply */
 char *keyword_replies[] = {
     "COMPUTER", "AND YOU DON'T BELIEVE A COMPUTER CAN HELP YOU?",    
+    "WHAT DO", "WELL, WHAT DO YOU THINK %s?",
+    "WHAT", "WELL, WHAT DO YOU BELIEVE %s?",
     "I REALLY", "I SEE... STRONG FEELINGS, BUT WHY EXACTLY DO YOU %s?",
     "I", "AND WHY IS IT THAT YOU %s?",
     "CAN YOU", "DON'T YOU BELIEVE I CAN %s?",
-    "WHAT DO YOU", "WELL, WHAT DO YOU THINK I %s?",
     "WHY", "WELL, WHY DO YOU THINK THAT IS?",
     "FUCK", "LANGUAGE, PLEASE!",
     "F*CK", "LANGUAGE, PLEASE!",

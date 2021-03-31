@@ -13,63 +13,58 @@
 #include "data.h"
 
 #define MESSAGE_MAX_LENGTH 100
+char msg[MESSAGE_MAX_LENGTH];
+char reply_end[MESSAGE_MAX_LENGTH];
 
-/* Replaces the first occurence of substr in str. 
- * Returns NULL if substr does not occur in str, otherwise a new string is returned. */
-char *replace_first(char *str, char *substr, char *replacement)
+/* Conjugates the pronouns in reply_end. */
+void conjugate_pronouns()
 {
-    char *occurence = strstr(str, substr);
-    if (occurence)
+    for (char *c = reply_end; *c != '\0'; c++)
     {
-        char *new = (char *) malloc(strlen(str) - strlen(substr) + strlen(replacement) + 1);
-        memcpy(new, str, strlen(str) - strlen(occurence));
-        strcat(new, replacement);
-        strcat(new, occurence + strlen(substr));
-        return new;
-    }
-    return NULL;
-}
-
-/* Conjugates the pronouns in a string. */
-char *conjugate_pronouns(char *msg)
-{
-    // TODO: Implement it in a way so that it can conjugate in both directions without generating an endless loop.
-    char *buffer = malloc(MESSAGE_MAX_LENGTH);
-    strcpy(buffer, msg);
-    for (char **pro = conjugations; *pro != END; pro += 2)
-    {
-        char *new;
-        while ((new = replace_first(buffer, *pro, *(pro + 1))) != NULL)
+        for (char **pro_conj = conjugations; *pro_conj != END; pro_conj += 2)
         {
-            strcpy(buffer, new);
-            free(new);
+            char *pronoun = *pro_conj;
+            // Pronoun found?
+            if (strncmp(pronoun, c, strlen(pronoun)) == 0 &&
+                (c == reply_end || *(c - 1) == ' ') && // Ugly as fuck, but I have to test if a word has been found.
+                (*(c + strlen(pronoun)) == '\0' || *(c + strlen(pronoun)) == ' '))
+            {
+                // Replace it and move on.
+                char *conj = *(pro_conj + 1);
+                char buff[MESSAGE_MAX_LENGTH];
+                strcpy(buff, conj);
+                strcat(buff, c + strlen(pronoun));
+                strcpy(c, buff);
+                c += strlen(conj);
+            }
         }
     }
-    return buffer;
 }
 
-/* Finds the first keyword in msg and returns the string after the keyword.
- * The correct reply to the keyword is placed in reply. */
-char *find_reply(char *msg, char **reply)
+/* Finds the first keyword in msg and places the string after the keyword in reply_end.
+ * The correct reply to the keyword is returned. */
+char *find_reply(char *msg)
 {
-    for (char **key = keyword_replies; *key != END; key += 2)
+    for (char **key_rep = keyword_replies; *key_rep != END; key_rep += 2)
     {
+        char *key = *(key_rep);
         char *occurence;
-        if ((occurence = strstr(msg, *key)) != NULL
+        if ((occurence = strstr(msg, key)) != NULL
             && (occurence == msg || *(occurence - 1) == ' ') // Make sure that only whole words/phrases are matched.
-            && (*(occurence + strlen(*key)) == '\0' || *(occurence + strlen(*key)) == ' '))
+            && (*(occurence + strlen(key)) == '\0' || *(occurence + strlen(key)) == ' '))
         {
-            *reply = *(key + 1);
-            return occurence + strlen(*key) + 1;
+            strcpy(reply_end, occurence + strlen(key) + 1);
+            char *reply = *(key_rep + 1);
+            return reply;
         }
     }
     // No keyword found, return default reply.
-    *reply = no_keyword;
-    return NULL;
+    reply_end[0] = '\0';
+    return no_keyword;
 }
 
 /* Applies preprocessing on input. */
-void preprocess(char *msg)
+void preprocess()
 {
     // Remove newline character
     msg[strlen(msg) - 1] = '\0';
@@ -97,24 +92,17 @@ int main()
 {
     // Print introdution.
     puts("HI! I'M ELIZA, HOW MAY I HELP YOU?\n");
-
-    char *msg = (char *) malloc(MESSAGE_MAX_LENGTH);
     while (1)
     {
         // Read and preprocess input.
         fgets(msg, MESSAGE_MAX_LENGTH, stdin);
-        preprocess(msg);
+        preprocess();
 
         // Find and print answer.
-        char *reply;
-        char *rest = find_reply(msg, &reply);
-        if (rest)
-        {
-            char *conj_rest = conjugate_pronouns(rest);
-            printf(reply, conj_rest);
-            puts("\n");
-        } else
-            printf("%s\n\n", reply);
+        char *reply = find_reply(msg);
+        conjugate_pronouns();
+        printf(reply, reply_end);
+        puts("\n");
     }
     
     return 0;
